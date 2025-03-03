@@ -509,7 +509,7 @@ class BandStructurePlot:
         self.ax.tick_params(axis="x", which="both", length=0)
         if self.show_grid_lines and self.main:
             self.ax.grid(
-                b=self.show_grid_lines,
+                visible=self.show_grid_lines,
                 which="major",
                 axis=self.grid_lines_axes,
                 linestyle=self.grid_linestyle,
@@ -676,7 +676,7 @@ class MullikenBandStructurePlot(BandStructurePlot):
 
         self.norm = kwargs.get("norm", Normalize(vmin=0.0, vmax=1.0))
 
-        self.scale_width = kwargs.get("scale_width", True)
+        self.scale_width = kwargs.get("scale_width", False)
         self.scale_width_factor = kwargs.get("scale_width_factor", 2)
 
         self.colors = kwargs.get("colors", ["red", "blue", "green"])
@@ -704,6 +704,8 @@ class MullikenBandStructurePlot(BandStructurePlot):
         
         self.base_linewidth = kwargs.get("base_linewidth", 0.0)
 
+        self.cutoff_bandwidth = kwargs.get("cutoff_bandwidth", 0.0001)
+
         self.show_colorbar = kwargs.get("show_colorbar", False)
 
     def draw(self):
@@ -718,7 +720,7 @@ class MullikenBandStructurePlot(BandStructurePlot):
         self.ax.tick_params(axis="x", which="both", length=0)
         if self.show_grid_lines and self.main:
             self.ax.grid(
-                b=self.show_grid_lines,
+                visible=self.show_grid_lines,
                 which="major",
                 axis=self.grid_lines_axes,
                 linestyle=self.grid_linestyle,
@@ -783,7 +785,11 @@ class MullikenBandStructurePlot(BandStructurePlot):
                 band_x, band_y, band_width, self.interpolation_step
             )
         color_array = band_width.copy()[:-1]
-        band_width = (band_width - np.min(band_width)) / (np.max(band_width) - np.min(band_width))
+        maxwidth = np.max(band_width)
+        if maxwidth < self.cutoff_bandwidth:
+            band_width = np.zeros_like(band_width)
+        else:
+            band_width = (band_width) / (maxwidth)
         band_width = band_width[:-1] + self.base_linewidth # so that it does not go to 0
         points = np.array([band_x, band_y]).T.reshape(-1, 1, 2)
         segments = np.concatenate(
@@ -826,10 +832,15 @@ class MullikenBandStructurePlot(BandStructurePlot):
         return band_x, band_y, band_width
 
     def _color_to_alpha_cmap(self, color):
-        cmap = LinearSegmentedColormap.from_list("", ["white", color])
-        my_cmap = cmap(np.arange(cmap.N))
-        my_cmap[:, -1] = np.linspace(0, 1, cmap.N)  # this adds alpha
-        my_cmap = ListedColormap(my_cmap)
+        from matplotlib import colors
+        rgb = colors.to_rgb(color)  # Converts named color or hex to (R, G, B)
+        cdict = {
+            "red":   [(0.0, 1.0, 1.0), (1.0, rgb[0], rgb[0])],
+            "green": [(0.0, 1.0, 1.0), (1.0, rgb[1], rgb[1])],
+            "blue":  [(0.0, 1.0, 1.0), (1.0, rgb[2], rgb[2])],
+            "alpha": [(0.0, 0.0, 0.0), (1.0, 1.0, 1.0)],  # Transparency transition
+        }
+        my_cmap = LinearSegmentedColormap("TransparentColormap", segmentdata=cdict)
         return my_cmap
 
     def _show_colorbar(self):

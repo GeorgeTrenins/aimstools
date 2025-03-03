@@ -203,7 +203,7 @@ class PhononPlot:
         self.ax.tick_params(axis="x", which="both", length=0)
         if self.show_grid_lines and self.main:
             self.ax.grid(
-                b=self.show_grid_lines,
+                visible=self.show_grid_lines,
                 which="major",
                 axis=self.grid_lines_axes,
                 linestyle=self.grid_linestyle,
@@ -383,7 +383,7 @@ class PhononDOSPlot:
 
         if self.show_grid_lines and self.main:
             self.ax.grid(
-                b=self.show_grid_lines,
+                visible=self.show_grid_lines,
                 which="major",
                 axis=self.grid_lines_axes,
                 linestyle=self.grid_linestyle,
