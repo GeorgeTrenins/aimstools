@@ -86,10 +86,12 @@ class Structure(Atoms):
         self._periodic_axes = None
         self._check_lattice_vectors()
 
-        try:
-            self.sg = ase.spacegroup.get_spacegroup(self, symprec=1e-2)
-        except:
-            self.sg = ase.spacegroup.Spacegroup(1)
+        #TODO: `get_spacegroup` is deprecated, replace with direct call to
+        #spglib
+        # try:
+        #     self.sg = ase.spacegroup.get_spacegroup(self, symprec=1e-2)
+        # except:
+        #     self.sg = ase.spacegroup.Spacegroup(1)
         self.lattice = self.cell.get_bravais_lattice().crystal_family
 
     def _check_lattice_vectors(self):
