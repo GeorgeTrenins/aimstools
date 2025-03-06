@@ -494,7 +494,6 @@ class BandStructurePlot:
         self.shift = spectrum.shift
         self.x = spectrum.kpoint_axis.copy()
         self.y = spectrum.eigenvalues[:, self.spin, :].copy() + self.shift
-        self.fermi_level = spectrum.fermi_level
         self.band_extrema = spectrum.band_extrema
 
     def draw(self):
@@ -734,6 +733,7 @@ class MullikenBandStructurePlot(BandStructurePlot):
                     linestyle=self.jumps_linestyle,
                     color=self.jumps_linecolor,
                     linewidth=self.jumps_linewidth,
+                    zorder=5
                 )
         if self.show_fermi_level and self.main:
             self._show_fermi_level()
