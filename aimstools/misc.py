@@ -131,7 +131,7 @@ class AxesContext:
             self.show = self.show if self.filename is None else False
         else:
             self.figure = plt.gcf()
-            plt.sca(self.ax)
+            # plt.sca(self.ax)
             self.show = False
 
         logger.debug("Is main context: {}".format(self.main))
