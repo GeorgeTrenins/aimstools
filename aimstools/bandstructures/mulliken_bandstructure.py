@@ -253,7 +253,7 @@ class MullikenBandStructure(BandStructureBaseClass):
         bandfiles = self.get_bandfiles(spin=self.spin, soc=soc)
         self.bandfiles = bandfiles.mulliken
         self.bands = self._read_mlk_bandfiles(spin=self.spin)
-        self._spectrum = self.set_spectrum(None, None)
+        self.set_spectrum(None, None)
 
     def __repr__(self):
         return "{}(outputfile={}, spin_orbit_coupling={})".format(
