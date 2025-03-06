@@ -306,10 +306,17 @@ class MullikenBandStructure(BandStructureBaseClass):
                         elif "k point" in line:
                             kp = np.asarray(line.strip().split()[-4:-1], dtype=np.float32)
                             kpoints.append(kp)                        
-                        elif ("State" not in line): 
+                        elif "State" in line: 
+                            if "spin" in line:
+                                # delete atom and spin indices
+                                _slc = slice(2,4)
+                            else:
+                                # only atom indices to delete
+                                _slc = slice(2,3)
+                        else:
                             value = line.strip().split()
                             del value[0] # remove state index
-                            del value[2:4] # remove atom and spin indices
+                            del value[_slc]
                             values.append(np.asarray(value, dtype=np.float32))
                             
                     
