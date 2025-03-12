@@ -749,27 +749,51 @@ class MullikenBandStructurePlot(BandStructurePlot):
                 linestyle=self.bands_linestyle,
             )
 
-        for band in range(self.y.shape[1]):
-            band_x = self.x.copy()
-            band_y = self.y[:, band].copy()
+        if self.mode in {"majority", "gradient"}:
             if self.mode == "majority":
                 con = self._get_majority_contribution()
-                band_width = con.contribution[:, self.spin, band].copy()
-                self.plot_linecollection(band_x, band_y, band_width, self.cmaps)
-            elif self.mode == "lines":
-                for i, con in enumerate(self.contributions):
-                    band_width = con.contribution[:, self.spin, band].copy()
-                    self.plot_linecollection(band_x, band_y, band_width, self.cmaps[i])
-            elif self.mode == "scatter":
-                for i, con in enumerate(self.contributions):
-                    band_width = con.contribution[:, self.spin, band].copy()
-                    self.plot_scatter(band_x, band_y, band_width, self.cmaps[i])
-            elif self.mode == "gradient":
-                con = self._get_difference_contribution()
-                band_width = con.contribution[:, self.spin, band].copy()
-                self.plot_linecollection(band_x, band_y, band_width, self.cmaps)
             else:
-                raise Exception(f"Mode {self.mode} not implemented.")
+                con = self._get_difference_contribution()
+            for band in range(self.y.shape[1]):
+                band_x = self.x.copy()
+                band_y = self.y[:, band].copy()    
+                band_width = con.contribution[:, self.spin, band].copy()
+                self.plot_linecollection(band_x, band_y, band_width, self.cmaps)
+        elif self.mode in {"lines", "scatter"}:
+            for i, con in enumerate(self.contributions):
+                for band in range(self.y.shape[1]):
+                    band_x = self.x.copy()
+                    band_y = self.y[:, band].copy()    
+                    band_width = con.contribution[:, self.spin, band].copy()
+                    if self.mode == "lines":
+                        self.plot_linecollection(band_x, band_y, band_width, self.cmaps[i])
+                    else:
+                        self.plot_scatter(band_x, band_y, band_width, self.cmaps[i])
+        else:
+            raise Exception(f"Mode {self.mode} not implemented.")
+
+
+        # for band in range(self.y.shape[1]):
+        #     band_x = self.x.copy()
+        #     band_y = self.y[:, band].copy()
+        #     if self.mode == "majority":
+        #         con = self._get_majority_contribution()
+        #         band_width = con.contribution[:, self.spin, band].copy()
+        #         self.plot_linecollection(band_x, band_y, band_width, self.cmaps)
+        #     elif self.mode == "lines":
+        #         for i, con in enumerate(self.contributions):
+        #             band_width = con.contribution[:, self.spin, band].copy()
+        #             self.plot_linecollection(band_x, band_y, band_width, self.cmaps[i])
+        #     elif self.mode == "scatter":
+        #         for i, con in enumerate(self.contributions):
+        #             band_width = con.contribution[:, self.spin, band].copy()
+        #             self.plot_scatter(band_x, band_y, band_width, self.cmaps[i])
+        #     elif self.mode == "gradient":
+        #         con = self._get_difference_contribution()
+        #         band_width = con.contribution[:, self.spin, band].copy()
+        #         self.plot_linecollection(band_x, band_y, band_width, self.cmaps)
+        #     else:
+        #         raise Exception(f"Mode {self.mode} not implemented.")
 
         if self.show_colorbar:
             self._show_colorbar()
@@ -820,8 +844,8 @@ class MullikenBandStructurePlot(BandStructurePlot):
         if self.scale_width:
             swidths = band_width.copy() * self.scale_width_factor
         else:
-            swidths = 1.5
-        self.ax.scatter(band_x, band_y, c=swidths, cmap=cmap, norm=self.norm, s=swidths)
+            swidths = 1.5*np.ones_like(band_width) * self.scale_width_factor
+        self.ax.scatter(band_x, band_y, c=band_width, cmap=cmap, norm=self.norm, s=swidths)
 
     def interpolate_bands_1d(self, band_x, band_y, band_width, interpolation_step):
         f1 = interpolate.interp1d(band_x, band_y)

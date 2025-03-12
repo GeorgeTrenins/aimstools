@@ -5,3 +5,5 @@ export PYTHONPATH=$ENV_BASE_DIR:$PYTHONPATH
 export AIMSTOOLS_ROOT=$ENV_BASE_DIR
 
 unset ENV_BASE_DIR
+
+source .venv/bin/activate
