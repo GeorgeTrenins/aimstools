@@ -6,6 +6,7 @@ from pathlib import Path
 import re, os
 
 from collections import namedtuple
+from typing import Union
 
 
 class FHIAimsControlReader(dict):
@@ -195,6 +196,7 @@ class FHIAimsOutputReader(dict):
         if self.is_converged:
             self.check_consistency()
             self.bandgap = self.get_bandgap()
+            self.eigenvalues = self.get_eigenvalues()
 
     def __find_outputfile(self):
         outputdir = self.outputdir
@@ -431,3 +433,39 @@ class FHIAimsOutputReader(dict):
             soc_gap = abs(band_extrema.cbm_soc - band_extrema.vbm_soc)
         scalar_gap = abs(band_extrema.vbm_scalar - band_extrema.cbm_scalar)
         return b(scalar_gap, soc_gap)
+
+    def get_eigenvalues(self) -> "numpy.ndarray":
+        #TODO: extend to the case of spin-collinear
+        import numpy as np
+        from itertools import cycle
+        outputfile = self.outputfile
+        with open(outputfile, "r") as file:
+            lines = file.readlines()
+        iteration = re.compile(r".*Begin self-consistency iteration \#\s+(\d+)")
+        lineiter = cycle(lines)
+        for _ in range(len(lines)):
+            line = next(lineiter)
+            match: Union[None, re.Match] = iteration.match(line)
+            if match is not None:
+                if int(match.group(1)) == self.nscf_steps:
+                    break
+        ks_header = re.compile(r".*Writing Kohn-Sham eigenvalues")
+        for _ in range(len(lines)):
+            line = next(lineiter)
+            match: Union[None, re.Match] = ks_header.match(line)
+            if match is not None:
+                break
+        for _ in range(2):
+            # skip header
+            next(lineiter)
+        # 1       2.00000        -100.661742        -2739.14536
+        value = r"[-]?(?:\d+)?\.\d+(?:[E,e][-,+]?\d+)?"
+        dataline = re.compile(rf".*\d+\s+{value}\s+{value}\s+({value})")
+        eigenvalues = []
+        for _ in range(len(lines)):
+            line = next(lineiter)
+            match: Union[None, re.Match] = dataline.match(line)
+            if match is None:
+                break
+            eigenvalues.append(float(match.group(1)))
+        return np.array(eigenvalues)
